@@ -1,0 +1,131 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information, roles, and account status.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["BENEFACTOR", "NOMINEE", "WITNESS"] },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Deceased"] },
+        "witnessThreshold": { "type": "number" },
+        "description": { "type": "string" },
+        "profileImage": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role", "status"]
+    },
+    "Asset": {
+      "title": "Asset",
+      "description": "Digital or physical items stored in the vault.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "handle": { "type": "string" },
+        "description": { "type": "string" },
+        "password": { "type": "string" },
+        "attachments": { "type": "array", "items": { "type": "string" } },
+        "assignedNomineeIds": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["Locked", "Assigned"] }
+      },
+      "required": ["id", "name", "category", "status"]
+    },
+    "Nominee": {
+      "title": "Nominee",
+      "description": "Heirs who will receive assets.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "relationship": { "type": "string" },
+        "priority": { "type": "number" },
+        "verificationStatus": { "type": "string", "enum": ["Pending", "Verified", "Rejected"] },
+        "securityKey": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "relationship", "priority", "verificationStatus"]
+    },
+    "Witness": {
+      "title": "Witness",
+      "description": "Guardians who verify heritage release requests.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "relationship": { "type": "string" },
+        "aadharNumber": { "type": "string" },
+        "securityKey": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "relationship"]
+    },
+    "Memory": {
+      "title": "Memory",
+      "description": "Personal memories stored for heirs.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["image", "video", "letter"] },
+        "contentUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "title", "type", "date"]
+    },
+    "Request": {
+      "title": "Access Request",
+      "description": "A request by a nominee to access a benefactor's vault.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nomineeId": { "type": "string" },
+        "nomineeName": { "type": "string" },
+        "nomineeEmail": { "type": "string" },
+        "benefactorId": { "type": "string" },
+        "benefactorName": { "type": "string" },
+        "benefactorEmail": { "type": "string" },
+        "reason": { "type": "string" },
+        "details": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected"] },
+        "timestamp": { "type": "string" },
+        "witnessApprovals": { "type": "array", "items": { "type": "string" } },
+        "witnessRejections": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "nomineeId", "benefactorId", "status", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents."
+    },
+    "/users/{userId}/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Assets owned by a benefactor."
+    },
+    "/users/{userId}/nominees/{nomineeId}": {
+      "schema": "Nominee",
+      "description": "Nominees assigned by a benefactor."
+    },
+    "/users/{userId}/witnesses/{witnessId}": {
+      "schema": "Witness",
+      "description": "Witnesses assigned by a benefactor."
+    },
+    "/users/{userId}/memories/{memoryId}": {
+      "schema": "Memory",
+      "description": "Memories stored by a benefactor."
+    },
+    "/requests/{requestId}": {
+      "schema": "Request",
+      "description": "Access requests."
+    }
+  }
+}

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E.D.I.T.H - Emergency Digital Inheritance & Transfer Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              accent: {
+                DEFAULT: 'var(--color-accent)', 
+                hover: 'var(--color-accent-hover)',
+                glow: 'var(--color-accent-glow)',
+                cyan: '#06B6D4',
+              },
+              void: {
+                950: '#020408',
+                900: '#0A0F1E',
+                800: '#111827',
+                700: '#1E293B',
+              }
+            },
+            boxShadow: {
+              'glass': 'var(--shadow-glass)',
+              '3d': 'var(--shadow-3d)',
+              'accent-glow': 'var(--shadow-accent-glow)',
+              'cyan-glow': 'var(--shadow-cyan-glow)',
+              'highlight': 'var(--shadow-highlight)',
+              'button-hover': 'var(--shadow-button-hover)',
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --color-accent: #9333EA; 
+        --color-accent-hover: #A855F7;
+        --color-accent-glow: rgba(147, 51, 234, 0.4);
+        --nebula-1-color: #9333EA;
+        --nebula-2-color: #06B6D4;
+        
+        --grid-color: rgba(147, 51, 234, 0.04);
+        --bg-color: #020408;
+        --text-color: #F8FAFC;
+        --nebula-opacity: 0.15;
+        
+        --shadow-glass: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        --shadow-3d: 0 20px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        --shadow-accent-glow: 0 0 30px rgba(147, 51, 234, 0.25);
+        --shadow-cyan-glow: 0 0 30px rgba(6, 182, 212, 0.25);
+        --shadow-highlight: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        --shadow-button-hover: 0 12px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .light {
+        --color-accent: #4F46E5; 
+        --color-accent-hover: #4338CA;
+        --color-accent-glow: rgba(79, 70, 229, 0.2);
+        --nebula-1-color: #4F46E5;
+        --nebula-2-color: #0EA5E9;
+
+        --grid-color: rgba(79, 70, 229, 0.08);
+        --bg-color: #F8FAFF;
+        --text-color: #0F172A;
+        --nebula-opacity: 0.08;
+
+        --shadow-glass: 0 12px 32px -8px rgba(79, 70, 229, 0.05);
+        --shadow-3d: 0 15px 40px -15px rgba(15, 23, 42, 0.08);
+        --shadow-accent-glow: 0 12px 24px -5px rgba(79, 70, 229, 0.15);
+        --shadow-cyan-glow: 0 12px 24px -5px rgba(14, 165, 233, 0.15);
+        --shadow-highlight: 0 8px 16px -4px rgba(79, 70, 229, 0.03);
+        --shadow-button-hover: 0 10px 20px -5px rgba(79, 70, 229, 0.1);
+      }
+
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        overflow-x: hidden;
+        min-height: 100vh;
+        letter-spacing: -0.015em;
+        transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s ease;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      button, a, input, textarea, .glass, svg, .card {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        perspective: 1000px;
+        background-clip: padding-box !important;
+      }
+
+      .glass {
+        backdrop-filter: blur(30px) saturate(160%);
+        -webkit-backdrop-filter: blur(30px) saturate(160%);
+      }
+
+      .dark .glass {
+        /* Subtle Depth Gradient */
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)), rgba(10, 15, 30, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        /* Layered Depth Effect: Elevation + Beveled Edges */
+        box-shadow: 
+          0 10px 40px -12px rgba(0, 0, 0, 0.6), 
+          0 4px 10px -2px rgba(0, 0, 0, 0.3),
+          0 0 10px rgba(147, 51, 234, 0.06), 
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+      }
+
+      /* Glassy buttons for dark mode with extreme depth on interaction */
+      .dark button.bg-accent, 
+      .dark button.bg-emerald-500,
+      .dark button.bg-blue-500,
+      .dark button.bg-rose-500 {
+        background: rgba(147, 51, 234, 0.6) !important;
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 
+          0 8px 16px rgba(0, 0, 0, 0.3), 
+          0 0 12px rgba(147, 51, 234, 0.15), 
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+      }
+      
+      .dark button.bg-emerald-500 { background: rgba(16, 185, 129, 0.6) !important; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 0 12px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+      .dark button.bg-blue-500 { background: rgba(59, 130, 246, 0.6) !important; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 0 12px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+      .dark button.bg-rose-500 { background: rgba(244, 63, 94, 0.6) !important; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 0 12px rgba(244, 63, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+
+      .dark button:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+          0 15px 30px rgba(0, 0, 0, 0.5), 
+          0 0 20px rgba(147, 51, 234, 0.3), 
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .light .glass {
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(79, 70, 229, 0.12);
+      }
+
+      /* Popup/Modal Overlay */
+      .dark .bg-slate-900\/60,
+      .dark .bg-black\/95,
+      .dark .bg-void-950\/90,
+      .dark .bg-void-950\/80 {
+        background-color: rgba(2, 4, 8, 0.5) !important;
+        backdrop-filter: blur(20px) saturate(140%) !important;
+      }
+
+      .perspective-scene {
+        position: fixed;
+        inset: 0;
+        perspective: 1500px;
+        z-index: -1;
+        overflow: hidden;
+      }
+
+      .grid-floor {
+        position: absolute;
+        width: 400%;
+        height: 400%;
+        top: -100%;
+        left: -150%;
+        background-image: 
+          linear-gradient(var(--grid-color) 1.5px, transparent 1.5px),
+          linear-gradient(90deg, var(--grid-color) 1.5px, transparent 1.5px);
+        background-size: 80px 80px;
+        transform: rotateX(70deg) rotateZ(0deg);
+        animation: grid-move 40s linear infinite;
+        opacity: 0.6;
+        mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 70%);
+        -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 70%);
+      }
+
+      @keyframes grid-move {
+        from { transform: rotateX(70deg) rotateZ(0deg) translateY(0); }
+        to { transform: rotateX(70deg) rotateZ(0deg) translateY(80px); }
+      }
+
+      .starfield {
+        position: absolute;
+        inset: -10%;
+        z-index: -3;
+      }
+      .star-layer {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                          radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                          radial-gradient(1.5px 1.5px at 50px 160px, #fff, rgba(0,0,0,0));
+        background-size: 200px 200px;
+        opacity: 0.1;
+      }
+
+      .nebula {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(160px);
+        opacity: var(--nebula-opacity);
+        z-index: -2;
+        animation: drift 40s ease-in-out infinite alternate;
+      }
+
+      .nebula-1 { width: 1400px; height: 1400px; background: radial-gradient(circle, var(--nebula-1-color) 0%, transparent 70%); top: -40%; left: -20%; }
+      .nebula-2 { width: 1200px; height: 1200px; background: radial-gradient(circle, var(--nebula-2-color) 0%, transparent 70%); bottom: -40%; right: -20%; animation-delay: -20s; }
+
+      @keyframes drift {
+        from { transform: translate(-50px, -50px) scale(1); }
+        to { transform: translate(50px, 50px) scale(1.1); }
+      }
+
+      /* Premium Scrollbar Design */
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(147, 51, 234, 0.2) transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar { 
+        width: 5px; 
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb { 
+        background: rgba(147, 51, 234, 0.2); 
+        border-radius: 20px;
+        border: 1.5px solid transparent;
+        background-clip: padding-box;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+        background: rgba(147, 51, 234, 0.5); 
+        border: 1px solid transparent;
+        background-clip: padding-box;
+      }
+
+      .light .custom-scrollbar {
+        scrollbar-color: rgba(79, 70, 229, 0.2) transparent;
+      }
+      .light .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(79, 70, 229, 0.2);
+      }
+      .light .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(79, 70, 229, 0.5);
+      }
+      
+      .icon-box {
+        border-width: 1px;
+        border-style: solid;
+        box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
+      }
+      
+      .dark .icon-box {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      
+      .light .icon-box {
+        border-color: rgba(79, 70, 229, 0.1);
+        background: rgba(255, 255, 255, 0.8);
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "framer-motion": "https://esm.sh/framer-motion@11.11.17?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.474.0?external=react,react-dom",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+</head>
+  <body class="antialiased">
+    <div class="perspective-scene">
+      <div class="starfield">
+        <div class="star-layer"></div>
+      </div>
+      <div class="grid-floor"></div>
+      <div class="nebula nebula-1"></div>
+      <div class="nebula nebula-2"></div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

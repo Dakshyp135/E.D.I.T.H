@@ -1,0 +1,166 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, enum: ["BENEFACTOR", "NOMINEE", "WITNESS"])
+    //   - status: string (required, enum: ["Active", "Inactive", "Deceased"])
+    //
+    // Collection: users/{userId}/assets
+    // Document ID: {assetId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - category: string (required)
+    //   - status: string (required, enum: ["Locked", "Assigned"])
+    //
+    // Collection: users/{userId}/nominees
+    // Document ID: {nomineeId}
+    //
+    // Collection: users/{userId}/witnesses
+    // Document ID: {witnessId}
+    //
+    // Collection: users/{userId}/memories
+    // Document ID: {memoryId}
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "deccanchargers135@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['id', 'name', 'email', 'role', 'status']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             isValidEmail(data.email) &&
+             data.role in ['BENEFACTOR', 'NOMINEE', 'WITNESS', 'admin'] &&
+             data.status in ['Active', 'Inactive', 'Deceased'];
+    }
+
+    function isValidAsset(data) {
+      return hasRequiredFields(['id', 'name', 'category', 'status']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.category is string &&
+             data.status in ['Locked', 'Assigned'];
+    }
+
+    function isApprovedNominee(benefactorId) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/requests/$(request.auth.uid + "_" + benefactorId)) &&
+        get(/databases/$(database)/documents/requests/$(request.auth.uid + "_" + benefactorId)).data.status == 'Approved';
+    }
+
+    function isWitnessFor(benefactorId) {
+      // This assumes the witness document ID is the witness's email
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(benefactorId)/witnesses/$(request.auth.token.email));
+    }
+
+    function isValidRequest(data) {
+      return hasRequiredFields(['id', 'nomineeId', 'benefactorId', 'status', 'timestamp']) &&
+             data.id is string &&
+             data.nomineeId is string &&
+             data.benefactorId is string &&
+             data.status in ['Pending', 'Approved', 'Rejected'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated(); // Allow searching for benefactors
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+
+      match /assets/{assetId} {
+        allow read: if isOwner(userId) || isAdmin() || isApprovedNominee(userId);
+        allow create: if isOwner(userId) && isValidAsset(request.resource.data);
+        allow update: if isOwner(userId) && isValidAsset(request.resource.data);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /nominees/{nomineeId} {
+        allow read: if isOwner(userId) || isAdmin() || (isAuthenticated() && (request.auth.token.email == resource.data.email || request.auth.uid == nomineeId));
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /witnesses/{witnessId} {
+        allow read: if isOwner(userId) || isAdmin() || (isAuthenticated() && (request.auth.token.email == resource.data.email || request.auth.uid == witnessId));
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      match /memories/{memoryId} {
+        allow read: if isOwner(userId) || isAdmin() || isApprovedNominee(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    match /requests/{requestId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.nomineeId || 
+        request.auth.uid == resource.data.benefactorId ||
+        isWitnessFor(resource.data.benefactorId)
+      );
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.nomineeId && isValidRequest(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.nomineeId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reason', 'details', 'evidence'])) ||
+        (isWitnessFor(resource.data.benefactorId) && request.resource.data.diff(resource.data).affectedKeys().hasAny(['witnessApprovals', 'witnessRejections', 'status'])) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /test/{docId} {
+      allow read: if true;
+    }
+  }
+}
